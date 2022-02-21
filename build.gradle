@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group 'ch.virtbad'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Menu Parser Dependency
+    implementation files('lib/SVMenuParser-1.2.jar') //TODO: Replace with jitpack version
+    implementation 'org.apache.pdfbox:pdfbox:2.0.24'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-simple:1.7.33'
+
+    // Serializer
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+    // Escape Getter and Setter hell
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+}
+
+test {
+
+}
