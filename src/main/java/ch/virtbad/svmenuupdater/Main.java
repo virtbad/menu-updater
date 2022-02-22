@@ -1,5 +1,21 @@
 package ch.virtbad.svmenuupdater;
 
+import ch.wsb.svmenuparser.menu.Menu;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Slf4j
 public class Main {
     public static void main(String[] args) { new Main(args); }
     private static final String VERSION = "0.1.0";
@@ -12,10 +28,12 @@ public class Main {
     }
 
     public Boolean action = null;
+
     public String upstreamUrl = null;
     public boolean print = false;
-    public String pdfLocation = null;
-    public Mode mode = null;
+
+    public String pdfLocation;
+    public Mode mode;
 
     public Main(String[] args) {
         processArguments(args);
@@ -25,13 +43,76 @@ public class Main {
 
     private void processInputs() {
         if (action == null) {
-            System.out.println("Please specify an action to do! Use --help for help.");
+            System.out.println("Please specify a mode of operation! Use --help for help.");
             return;
         }
 
         if (action) {
-            
+            if (!print && upstreamUrl == null) {
+                System.out.println("Please specify an output method! Use --help for help.");
+                return;
+            }
+
+            System.out.println("Initiating Parsing sequence!\n");
+
+            List<Menu> menus = new ArrayList<>();
+
+            switch (mode) {
+                case FILE -> menus = MenuReader.readFile(new File(pdfLocation));
+                case DIRECTORY -> menus = MenuReader.readFolder(new File(pdfLocation));
+                case WEB -> {
+                    try {
+                        menus = MenuReader.readUrl(new URL(pdfLocation));
+                    } catch (MalformedURLException e) {
+                        log.error("Invalid web url provided!");
+                    }
+                }
+                case TODAY -> {
+                    String url = createTodayUrlString(pdfLocation);
+
+                    try {
+                        menus = MenuReader.readUrl(new URL(url));
+                    } catch (MalformedURLException e) {
+                        log.error("Formatted url seems to be invalid: {}", url);
+                    }
+                }
+            }
+
+            if (print) {
+                System.out.printf("\nPrinting out %d serialized menus:\n", menus.size());
+
+                for (Menu menu : menus) {
+                    System.out.printf("  Serialized menu on %s: %s - %s\n", new SimpleDateFormat("dd.MM.yy").format(menu.getDate()), menu.getTitle(), menu.getDescription());
+                }
+            } else {
+                new MenuSubmitter(upstreamUrl).submit(menus);
+            }
         }
+    }
+
+    @SneakyThrows
+    public String createTodayUrlString(String entered) {
+        Pattern p = Pattern.compile("\\{(\\w+)}");
+        Date date = new Date();
+
+        Matcher m = p.matcher(entered);
+        while (m.find()) {
+            String replacement = "";
+            if (m.group(1).equals("ww")) { // Create custom week number not based off of the week year
+                GregorianCalendar calendar = new GregorianCalendar();
+                calendar.setFirstDayOfWeek(GregorianCalendar.MONDAY);
+                calendar.setMinimalDaysInFirstWeek(4);
+                calendar.setTime(date);
+
+                replacement = "" + calendar.get(GregorianCalendar.WEEK_OF_YEAR);
+                if (replacement.length() == 1) replacement = "0" + replacement;
+
+            } else replacement = new SimpleDateFormat(m.group(1)).format(date);
+
+            entered = entered.replaceFirst(Pattern.quote(m.group(0)), replacement);
+        }
+
+        return entered;
     }
 
     public void processArguments(String[] args) {
@@ -44,9 +125,7 @@ public class Main {
                         i++;
                         upstreamUrl = args[i];
                     }
-                    case "-p", "--print" -> {
-                        print = true;
-                    }
+                    case "-p", "--print" -> print = true;
 
                     // Modes
                     case "-f", "--file" -> {
