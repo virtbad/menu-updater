@@ -1,24 +1,25 @@
 package ch.virtbad.svmenuupdater;
 
 import ch.wsb.svmenuparser.menu.Menu;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * This class is the main class and also handles the cli things
+ */
 @Slf4j
 public class Main {
     public static void main(String[] args) { new Main(args); }
-    private static final String VERSION = "0.1.0";
+    private static final String VERSION = "1.0.0";
 
     private enum Mode {
         FILE,
@@ -41,6 +42,9 @@ public class Main {
         processInputs();
     }
 
+    /**
+     * Processes the parsed arguments as inputs and runs the reading and submitting
+     */
     private void processInputs() {
         if (action == null) {
             System.out.println("Please specify a mode of operation! Use --help for help.");
@@ -55,7 +59,7 @@ public class Main {
 
             System.out.println("Initiating Parsing sequence!\n");
 
-            List<Menu> menus = new ArrayList<>();
+            List<Menu> menus = null;
 
             switch (mode) {
                 case FILE -> menus = MenuReader.readFile(new File(pdfLocation));
@@ -78,6 +82,11 @@ public class Main {
                 }
             }
 
+            if (menus == null) {
+                System.err.println("\nParsing menus did not work!");
+                System.exit(1);
+            }
+
             if (print) {
                 System.out.printf("\nPrinting out %d serialized menus:\n", menus.size());
 
@@ -85,12 +94,19 @@ public class Main {
                     System.out.printf("  Serialized menu on %s: %s - %s\n", new SimpleDateFormat("dd.MM.yy").format(menu.getDate()), menu.getTitle(), menu.getDescription());
                 }
             } else {
-                new MenuSubmitter(upstreamUrl).submit(menus);
+                if (!new MenuSubmitter(upstreamUrl).submit(menus)) {
+                    System.err.println("\nNot all menus were uploaded!");
+                    System.exit(1);
+                }
             }
         }
     }
 
-    @SneakyThrows
+    /**
+     * Creates the url string with the current date for the today argument
+     * @param entered entered string with date format components
+     * @return formatted string
+     */
     public String createTodayUrlString(String entered) {
         Pattern p = Pattern.compile("\\{(\\w+)}");
         Date date = new Date();
@@ -115,6 +131,10 @@ public class Main {
         return entered;
     }
 
+    /**
+     * Processes the arguments given to the jar on execution
+     * @param args args given
+     */
     public void processArguments(String[] args) {
         for (int i = 0; i < args.length; i++) {
 
@@ -176,6 +196,9 @@ public class Main {
         }
     }
 
+    /**
+     * Prints the help message to the standard out
+     */
     public void printHelp() {
         System.out.println(
                 """
@@ -201,6 +224,9 @@ public class Main {
         );
     }
 
+    /**
+     * Prints the version to the standard out
+     */
     public void printVersion() {
         System.out.println("SV Menu Updater version " + VERSION + "\n  Licensed under the MIT License\n  https://github.com/virtbad/menu-updater");
     }

@@ -36,19 +36,25 @@ public class MenuSubmitter {
     /**
      * Submits a list of menus to the api.
      * @param menus menus to submit
+     * @return whether it was successful
      */
-    public void submit(List<Menu> menus) {
+    public boolean submit(List<Menu> menus) {
         log.info("Submitting {} menus.", menus.size());
+
+        boolean done = true;
         for (Menu menu : menus) {
-            submit(menu);
+            if(!submit(menu)) done = false;
         }
+
+        return done;
     }
 
     /**
      * Submits a menu to the api.
      * @param menu menu to submit
+     * @return whether it was successful
      */
-    public void submit(Menu menu) {
+    public boolean submit(Menu menu) {
         log.info("Submitting Menu: {}", menu.getTitle());
         try {
             HttpResponse<Void> response = client.send(
@@ -59,11 +65,16 @@ public class MenuSubmitter {
                             .build(),
                     HttpResponse.BodyHandlers.discarding());
 
-            if (response.statusCode() != 200) log.error("Failed to submit menu with error: {}", response.statusCode());
+            if (response.statusCode() != 200) {
+                log.error("Failed to submit menu with error: {}", response.statusCode());
+                return false;
+            }
+            return true;
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IllegalArgumentException | IOException | InterruptedException e) {
             log.error("Failed to submit Menu!");
-            e.printStackTrace();
+            log.error("Caused by {}: {}", e.getClass().getName(), e.getMessage());
+            return false;
         }
     }
 

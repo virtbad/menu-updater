@@ -34,7 +34,7 @@ public class MenuReader {
             }
         } else log.error("Failed to read file as pdf because it is a folder: {}", file);
 
-        return new ArrayList<>();
+        return null;
     }
 
     /**
@@ -57,7 +57,7 @@ public class MenuReader {
             }
         } else {
             log.error("Failed to read menus from folder because it is a file: {}", dir);
-            return new ArrayList<>();
+            return null;
         }
 
         return readPDFs(documents.toArray(new PDDocument[0]));
@@ -78,7 +78,7 @@ public class MenuReader {
             e.printStackTrace();
         }
 
-        return new ArrayList<>();
+        return null;
     }
 
     /**
@@ -100,6 +100,6 @@ public class MenuReader {
             e.printStackTrace();
         }
 
-        return new ArrayList<>();
+        return null;
     }
 }
