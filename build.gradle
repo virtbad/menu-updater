@@ -28,3 +28,15 @@ dependencies {
 test {
 
 }
+
+// Build fat jar
+jar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    manifest {
+        attributes 'Main-Class': 'ch.virtbad.svmenuupdater.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

@@ -1,4 +1,4 @@
-package ch.virbad.svmenuupdater;
+package ch.virtbad.svmenuupdater;
 
 import ch.wsb.svmenuparser.menu.Menu;
 import ch.wsb.svmenuparser.parser.MenuParser;
