@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  upstream-deploy:
+
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Setting up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Validating Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+
+
+      - name: Building JAR with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew bootJar
+          mv build/libs/* build/libs/menu-updater.jar
+
+      - name: Setting up SSH
+        run: |
+          mkdir ~/.ssh
+          ssh-keyscan -H ${{ secrets.IP }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KEY }}" >> ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Uploading new build
+        run: scp build/libs/menu-updater.jar menu@${{ secrets.IP }}:/home/menu/updater/menu-updater.jar

@@ -7,11 +7,12 @@ version '1.0'
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     // Menu Parser Dependency
-    implementation files('lib/SVMenuParser-1.2.jar') //TODO: Replace with jitpack version
+    implementation 'com.github.WhySoBad:SVMenuParser:mod-SNAPSHOT'
     implementation 'org.apache.pdfbox:pdfbox:2.0.24'
 
     // Logging
