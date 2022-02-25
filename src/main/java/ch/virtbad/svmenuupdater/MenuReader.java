@@ -93,6 +93,7 @@ public class MenuReader {
             MenuParser parser = new MenuParser();
             for (PDDocument pdf : pdfs) {
                 parser.readPDF(pdf);
+                pdf.close();
             }
             return parser.getMenus();
         } catch (Exception e) {
