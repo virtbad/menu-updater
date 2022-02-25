@@ -28,7 +28,7 @@ jobs:
       - name: Building JAR with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew bootJar
+          ./gradlew jar
           mv build/libs/* build/libs/menu-updater.jar
 
       - name: Setting up SSH
